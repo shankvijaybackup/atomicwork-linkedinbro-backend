@@ -1,0 +1,24 @@
+vijay@mac frontend % npm run dev                   
+
+> frontend@0.0.0 dev
+> vite
+
+7:59:10 pm [vite] (client) Re-optimizing dependencies because lockfile has changed
+
+  VITE v6.3.5  ready in 431 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+Error: The following dependencies are imported but could not be resolved:
+
+  rehype-classname (imported by /Users/vijay/Downloads/seamtro-agent/frontend/src/App.jsx)
+
+Are they installed?
+    at file:///Users/vijay/Downloads/seamtro-agent/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:14849:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/vijay/Downloads/seamtro-agent/frontend/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:46985:28
+
+
+
+

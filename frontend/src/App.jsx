@@ -10,15 +10,21 @@ export default function App() {
 
   const generateInsight = async () => {
     setLoading(true);
-    const res = await fetch('https://<your-backend-url>/generate-insight', {
+
+    const sanitizedMyProfile = sanitizeInput(myProfile);
+    const sanitizedTheirProfile = sanitizeInput(theirProfile);
+    const sanitizedMeetingPurpose = sanitizeInput(meetingPurpose);
+
+    const res = await fetch('https://linketbro.onrender.com/generate-insight', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        my_profile: myProfile,
-        their_profile: theirProfile,
-        meeting_purpose: meetingPurpose
+        my_profile: sanitizedMyProfile,
+        their_profile: sanitizedTheirProfile,
+        meeting_purpose: sanitizedMeetingPurpose
       })
     });
+
     const data = await res.json();
     setInsight(data.output);
     setLoading(false);
@@ -66,3 +72,9 @@ export default function App() {
     </div>
   );
 }
+
+const sanitizeInput = (input) => {
+  // Remove control characters (non-printable characters)
+  const regex = /[\x00-\x1F\x7F]/g;
+  return input.replace(regex, '');  // Replace invalid characters with an empty string
+};
