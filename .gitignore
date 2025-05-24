@@ -1,0 +1,10 @@
+# Ignore the .env file
+.env
+
+# Ignore Node.js dependencies folder
+node_modules/
+
+# Ignore macOS system files
+.DS_Store
+
+# Add any other files/folders you want Git to ignore
