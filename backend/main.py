@@ -7,17 +7,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
 app = FastAPI()
 
-origins = ["*"]
+origins = [
+    "*",  # Consider restricting this to your frontend domain for security
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class InsightRequest(BaseModel):
     my_profile: str
@@ -25,36 +29,39 @@ class InsightRequest(BaseModel):
     meeting_purpose: str
 
 @app.post("/generate-insight")
-async def generate_insight(req: InsightRequest):
+async def generate_insight(data: InsightRequest):
     prompt = f"""
-You are a DISC-aware AI that creates LinkedIn outreach strategies.
+You are a B2B outreach assistant that crafts DISC-personality-based messages.
 
-Given:
-- My LinkedIn profile: {req.my_profile}
-- Prospect's LinkedIn profile: {req.their_profile}
-- Purpose: {req.meeting_purpose}
+Inputs:
+- My profile: {data.my_profile}
+- Their profile: {data.their_profile}
+- Meeting purpose: {data.meeting_purpose}
 
-Steps:
-1. Analyze the prospect's DISC personality type (D, I, S, C).
-2. Create outreach variations that match the DISC tone.
-3. Generate outreach messages in the style of 4 founders: Vijay R, Kiran D, Parsu, Lenin G.
-4. Each message must have:
-   - How [Founder Name] would outreach :
-   - Subject :
-   - Message : (max 500 characters)
-   - Include [Copy] tag after each message block.
-
-Return only the 4 formatted message blocks, nothing else.
+Output instructions:
+1. Identify DISC type of the *prospect* and tailor all outreach accordingly.
+2. Output multiple outreach messages in this exact format:
+   How Vijay R would outreach :
+   Subject : ...
+   Message : ...
+   How Kiran D would outreach :
+   Subject : ...
+   Message : ...
+   How Parsu would outreach :
+   Subject : ...
+   Message : ...
+   How Lenin G would outreach :
+   Subject : ...
+   Message : ...
+3. Limit each message to 300–500 characters.
+4. Do NOT use markdown (no ###, **, or -).
+5. Include copy buttons after each block.
 """
 
     response = openai.ChatCompletion.create(
         model="gpt-4",
-        temperature=0.7,
-        messages=[
-            {"role": "system", "content": "You generate LinkedIn outreach using DISC and founder personas."},
-            {"role": "user", "content": prompt}
-        ]
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
     )
 
-    final_output = response.choices[0].message.content
-    return {"output": final_output}
+    return {"output": response["choices"][0]["message"]["content"]}
