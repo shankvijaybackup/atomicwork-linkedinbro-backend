@@ -30,7 +30,7 @@
 
       document.getElementById("result").textContent = "Generating...";
 
-      const response = await fetch("http://localhost:8000/generate-insight", {
+      const response = await fetch("https://atomicwork-linkedinbro-backend.onrender.com/generate-insight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ my_profile: myProfile, their_profile: theirProfile, meeting_purpose: purpose })
