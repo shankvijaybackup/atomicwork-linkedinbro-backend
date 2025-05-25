@@ -1,13 +1,53 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LinkedIn Bro Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">LinkedIn Bro – Outreach Assistant</h1>
+
+    <textarea id="myProfile" rows="6" placeholder="Paste YOUR profile here…" class="w-full p-3 mb-4 border rounded"></textarea>
+    <textarea id="theirProfile" rows="10" placeholder="Paste PROSPECT'S profile here…" class="w-full p-3 mb-4 border rounded"></textarea>
+    <input id="purpose" type="text" placeholder="Meeting Purpose (e.g. LinkedIn Outreach)" class="w-full p-3 mb-4 border rounded"/>
+
+    <button onclick="generateInsights()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+      Generate Insights
+    </button>
+
+    <div id="result" class="mt-6 whitespace-pre-wrap text-sm leading-6"></div>
+  </div>
+
+  <script>
+    async function generateInsights() {
+      const myProfile = document.getElementById("myProfile").value;
+      const theirProfile = document.getElementById("theirProfile").value;
+      const purpose = document.getElementById("purpose").value;
+
+      document.getElementById("result").textContent = "Generating...";
+
+      const response = await fetch("http://localhost:8000/generate-insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ my_profile: myProfile, their_profile: theirProfile, meeting_purpose: purpose })
+      });
+
+      const data = await response.json();
+      document.getElementById("result").innerHTML = data.output.replace(/\[Copy\]/g, '<button onclick="copyText(this)" class="ml-2 px-2 py-1 text-xs bg-gray-200 rounded">Copy</button>');
+    }
+
+    function copyText(button) {
+      const range = document.createRange();
+      range.selectNode(button.previousSibling);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand("copy");
+      window.getSelection().removeAllRanges();
+      alert("Copied to clipboard!");
+    }
+  </script>
+</body>
 </html>
