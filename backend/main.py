@@ -87,3 +87,4 @@ completion = client.chat.completions.create(
     temperature=0.7
 )
 output = completion.choices[0].message.content
+    
