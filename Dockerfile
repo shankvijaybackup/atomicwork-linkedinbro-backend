@@ -6,14 +6,13 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-COPY frontend ./
+COPY frontend .
 RUN npm run build
 
 
 # ------------ 2. Setup Python Backend ------------
 FROM python:3.10-slim AS backend
 
-# Set working directory
 WORKDIR /app
 
 # Install backend dependencies
@@ -26,11 +25,10 @@ COPY backend ./backend
 # Copy built frontend into backend static files
 COPY --from=frontend /app/frontend/dist ./frontend_dist
 
-# Install Uvicorn
+# Install production server
 RUN pip install uvicorn python-multipart
 
 # Expose port
 EXPOSE 8000
 
-# Start FastAPI with Uvicorn and serve frontend from static directory
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
