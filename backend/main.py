@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -6,18 +7,13 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
-origins = [
-    "*",  # Consider restricting this to your frontend domain for security
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,39 +25,66 @@ class InsightRequest(BaseModel):
     meeting_purpose: str
 
 @app.post("/generate-insight")
-async def generate_insight(data: InsightRequest):
+async def generate_insight(req: InsightRequest):
+    my_profile = req.my_profile.strip()
+    their_profile = req.their_profile.strip()
+    meeting_purpose = req.meeting_purpose.strip()
+
     prompt = f"""
-You are a B2B outreach assistant that crafts DISC-personality-based messages.
+    You are Atomicwork's DISC-personalized outreach generator.
 
-Inputs:
-- My profile: {data.my_profile}
-- Their profile: {data.their_profile}
-- Meeting purpose: {data.meeting_purpose}
+    STEP 1: Based on the two LinkedIn profiles (mine and the prospect's), analyze the PROSPECT and extract DISC personality traits.
 
-Output instructions:
-1. Identify DISC type of the *prospect* and tailor all outreach accordingly.
-2. Output multiple outreach messages in this exact format:
-   How Vijay R would outreach :
-   Subject : ...
-   Message : ...
-   How Kiran D would outreach :
-   Subject : ...
-   Message : ...
-   How Parsu would outreach :
-   Subject : ...
-   Message : ...
-   How Lenin G would outreach :
-   Subject : ...
-   Message : ...
-3. Limit each message to 300–500 characters.
-4. Do NOT use markdown (no ###, **, or -).
-5. Include copy buttons after each block.
-"""
+    STEP 2: Generate a Strategic Meeting Prep block including:
+    - Connection Angle
+    - Common Ground
+    - Talking Points
+    - Ice Breakers
+    - Key Questions
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
+    STEP 3: Generate 10 outreach variations — grouped under founder personas:
+    How Vijay R would outreach:
+    Subject:
+    Message:
 
-    return {"output": response["choices"][0]["message"]["content"]}
+    How Kiran D would outreach:
+    Subject:
+    Message:
+
+    How Parsu M would outreach:
+    Subject:
+    Message:
+
+    How Lenin Gali would outreach:
+    Subject:
+    Message:
+
+    Each founder should have at least 2 variations.
+    Use a blend of DISC tone, Common Ground, Ice Breakers, ROI Storytelling, and Key Questions.
+    All messages must:
+    - Mention the prospect’s first name
+    - Be 500 characters only
+    - Use plain text (no markdown, no bullets)
+    - Make sure you ### or ** in outreach variations
+    - Make sure you use DISC tone using the strategic meeting prep block data points all 5 combos
+
+    My Profile:
+    {my_profile}
+
+    Prospect Profile:
+    {their_profile}
+
+    Meeting Purpose:
+    {meeting_purpose}
+    """
+
+    try:
+        completion = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        output = completion.choices[0].message["content"]
+        return {"output": output}
+    except Exception as e:
+        return {"error": str(e)}
