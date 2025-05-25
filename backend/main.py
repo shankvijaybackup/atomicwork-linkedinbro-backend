@@ -1,19 +1,20 @@
-from fastapi import FastAPI
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -24,97 +25,66 @@ class InsightRequest(BaseModel):
     meeting_purpose: str
 
 @app.post("/generate-insight")
-async def generate_insight(data: InsightRequest):
-    atomicworkContext = """
-AI-First, Human-Centric - ServiceNow built workflows; Atomicwork automates them intelligently. Our Agentic AI at the core of your service management frees employees from repetitive tasks.
-
-Radical Simplicity, Lightning Deployment - Enterprise-grade ITSM in weeks. Complexity belongs in the past. Atomicwork makes speed your advantage.
-
-Employee Support That Feels Like Consumer Experience - Imagine ServiceNow with the UX of your favorite apps. That’s Atomicwork.
-
-Purpose-Built AI Agents - Atomicwork deploys AI Agents for IT, HR, Finance to instantly resolve employee requests and deliver proactive service.
-
-Automate 90%, Humanize the 10% - We automate intelligently so your teams can focus on the work that truly needs empathy and insight.
-
-Future-Proof & Vendor-Free - No lock-in. Atomicwork’s open architecture avoids costly customizations and supports agility.
-
-Built for Global Scale - Enterprise-ready from day one with global security, compliance, and performance.
-
-50% Lower TCO - Slash platform overhead and integration cost. Free up budgets for innovation.
-
-Loved by Employees, Trusted by CIOs - Atomicwork drives adoption, satisfaction, and strategic trust.
-
-Endorsed by 50+ Top CIOs - Personally backed by industry leaders as the definitive challenger to ServiceNow, Atlassian, and BMC.
-
-Reusable Models:
-Talking Points:
-• Applying Agentic AI to reduce incident volume
-• Workflow simplification in hybrid IT environments
-• Pitfalls in scaling AI in enterprise ops
-• Low-friction integrations vs. legacy ITSM challenges
-• ROI storytelling: cost + employee experience
-
-Ice Breakers:
-• “What’s the biggest AI opportunity you see in IT right now?”
-• “What inspired your move into tech-led ops?”
-• “If budget weren’t a constraint, what would you automate today?”
-
-Key Questions:
-• What metrics define success in your current ITSM stack?
-• How is your team currently approaching AI pilots or proofs of value?
-• What’s your north star when evaluating cost-saving tech?
-• What’s been most difficult to modernize—people, process, or tools?
-• What do you hope to change in IT ops over the next 12 months?
-"""
+async def generate_insight(req: InsightRequest):
+    my_profile = req.my_profile.strip()
+    their_profile = req.their_profile.strip()
+    meeting_purpose = req.meeting_purpose.strip()
 
     prompt = f"""
-You are an AI assistant preparing a strategic meeting summary and outreach message set
-based on two LinkedIn profile summaries and a meeting purpose.
+    You are Atomicwork's DISC-personalized outreach generator.
 
-Here are the inputs:
-- My Profile Summary: {data.my_profile}
-- Their Profile Summary: {data.their_profile}
-- Meeting Purpose: {data.meeting_purpose}
+    STEP 1: Based on the two LinkedIn profiles (mine and the prospect's), analyze the PROSPECT and extract DISC personality traits.
 
-Use the Atomicwork company positioning and product context below:
+    STEP 2: Generate a Strategic Meeting Prep block including:
+    - Connection Angle
+    - Common Ground
+    - Talking Points
+    - Ice Breakers
+    - Key Questions
 
-{atomicworkContext}
+    STEP 3: Generate 10 outreach variations — grouped under founder personas:
+    How Vijay R would outreach:
+    Subject:
+    Message:
 
-Your output should include:
+    How Kiran D would outreach:
+    Subject:
+    Message:
 
-### 1. Strategic Meeting Prep
-- **Connection Angle** – 1 paragraph
-- **Common Ground** – 4–6 bullets
-- **Talking Points** – 4–5 bullets
-- **Ice Breakers** – 2–3 friendly openers
-- **Key Questions** – 4–5 strategic questions
+    How Parsu M would outreach:
+    Subject:
+    Message:
 
-### 2. Outreach Pack Variations
-Generate **10 outreach variations**. Each variation must include:
-- **Subject Line**: under 8 words
-- **LinkedIn DM Message**: under 300 characters, actionable and conversational
+    How Lenin Gali would outreach:
+    Subject:
+    Message:
 
-Each outreach message should be distinct — with a unique hook such as:
-• Agentic AI  
-• Reducing TCO  
-• Modern UI/UX  
-• Deployment Speed  
-• ROI & Business Value  
-• Compliance-readiness  
-• Future-proof AI Stack  
-• Employee Delight  
-• Executive Recognition  
-• Low-friction Integrations
+    Each founder should have at least 2 variations.
+    Use a blend of DISC tone, Common Ground, Ice Breakers, ROI Storytelling, and Key Questions.
+    All messages must:
+    - Mention the prospect’s first name
+    - Be 500 characters only
+    - Use plain text (no markdown, no bullets)
+    - Make sure you ### or ** in outreach variations
+    - Make sure you use DISC tone using the strategic meeting prep block data points all 5 combos
 
-Make sure Atomicwork is naturally woven in. Format everything in **Markdown** using clear headers.
-"""
+    My Profile:
+    {my_profile}
 
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7
-    )
+    Prospect Profile:
+    {their_profile}
 
-    return {"output": response.choices[0].message.content}
+    Meeting Purpose:
+    {meeting_purpose}
+    """
+
+    try:
+        completion = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        output = completion.choices[0].message["content"]
+        return {"output": output}
+    except Exception as e:
+        return {"error": str(e)}
