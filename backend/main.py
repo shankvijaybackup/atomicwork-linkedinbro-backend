@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
+import openai
 import os
 from dotenv import load_dotenv
 
@@ -79,11 +80,12 @@ async def generate_insight(req: InsightRequest):
     """
 
     try:
- client = openai.OpenAI()
+client = openai.OpenAI()
 
 completion = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": prompt}],
     temperature=0.7
 )
+
 output = completion.choices[0].message.content
